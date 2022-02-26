@@ -13,10 +13,10 @@ spdR = 0
 
 
 def PID(target, current):
-    auto = autoPID(target, 10, 5, 60, 0, 265)
-    auto.run(current)
-    #mPID = mainPID(0.3, 0.3, 0.1, 0.3, 50, 265)
-    mPID = mainPID(5, auto.get_pid_parameters()[0], auto.get_pid_parameters()[1], auto.get_pid_parameters()[2], 0, 265)
+    #auto = autoPID(target, 10, 5, 60, 0, 265)
+    #auto.run(current) 0.3 0.1 0.3
+    mPID = mainPID(5, 0.2, 0.1, 0.2, 50, 265)
+    #mPID = mainPID(5, auto.get_pid_parameters()[0], auto.get_pid_parameters()[1], auto.get_pid_parameters()[2], 0, 265)
     return mPID.calc(current, target)
 
 def scan_callback(msg):
@@ -28,12 +28,12 @@ def scan_callback(msg):
                 + "(intensities), "
                 + str(msg.ranges[270])
                 + "(ranges).")"""
-    global spdL
+    global spdL 
     global spdR
-    middleLidarPlank_90_270 = (msg.intensities[90] + msg.intensities[270]) / 2
-    spdR = PID(middleLidarPlank_90_270, msg.intensities[90])
-    spdL = PID(middleLidarPlank_90_270, msg.intensities[270])
 
+    middleLidarPlank_90_270 = (msg.intensities[90] + msg.intensities[270]) / 2
+    spdR = PID(middleLidarPlank_90_270, msg.intensities[90]) 
+    spdL = PID(middleLidarPlank_90_270, msg.intensities[270]) 
 
 if __name__ == '__main__':
     rospy.init_node("test_node")
@@ -55,7 +55,6 @@ if __name__ == '__main__':
         msg_XL430R.y = 2 #ID
 
         msg_XL430L.x = spdL #spd
-
         msg_XL430R.x = spdR #spd
 
         #msg_XL430L.z = IDK
