@@ -98,10 +98,19 @@ class PIDAutotune(object):
                 the parameters.
         """
         divisors = self._tuning_rules[tuning_rule]
-        kp = self._Ku / divisors[0]
-        ki = kp / (self._Pu / divisors[1])
-        kd = kp * (self._Pu / divisors[2])
+        kp = self._Ku / 34
+        ki = kp / (self._Pu / 40)
+        kd = kp * (self._Pu / 160)
         return PIDAutotune.PIDParams(kp, ki, kd)
+    
+    def getKp(self, rule):
+        kp = self._Ku / 34
+
+    def getKi(self, rule):
+        kp = (self._Ku / 34) / (self._Pu / 40)
+
+    def getKd(self, rule):
+        kp = (self._Ku / 34) * (self._Pu / 160)
 
     def run(self, input_val):
         """To autotune a system, this method must be called periodically.
