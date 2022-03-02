@@ -7,8 +7,12 @@ import numpy as np
 
 from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import LaserScan
+
 from PIDcontroller.PIDAutotune import PIDAutotune as autoPID
 from PIDcontroller.PID import PID as mainPID
+
+from Helpers.MotionAlgorithmD import Algorithm as algD
+from Helpers.MotionAlgorithmS import Chanks as algS
 
 spdL = 0
 spdR = 0
@@ -30,72 +34,16 @@ def scan_callback(msg):
                 + "(intensities), "
                 + str(msg.ranges[270])
                 + "(ranges).")"""
-    f_max = False
-    f_min = False
-    middle = 0
-    aC = 0 #array counter
-    mass=[[-1]*3]*30
-    mas=[-1]*30
-    #rospy.loginfo(mas) 
+    
+    #algD(msg.ranges)
+    algS(msg.ranges)
     '''
-    mass[i][0] - max or min value (1 or 0)
-    mass[i][1] - degree of point (gradus)
-    mass[i][2] - value of point (range)
-'''    '''
-    
-    #filter
-    for i in range(0,360):
-        middle += msg.ranges[i]
-    middle = middle / 360  
-    
-    #sorting
-    if msg.ranges[359]<msg.ranges[0] or f_max:
-        f_max=True
-        if msg.ranges[359]>msg.ranges[0]:
-            #mass[aC][0]=1 
-            #mass[aC][1]=0
-            #mass[aC][2]=msg.ranges[359]
-            mas[aC]=msg.ranges[359]
-            aC+=1
-            f_max=False
-    
-    if msg.ranges[359]>msg.ranges[0] or f_min:
-        f_min=True
-        if msg.ranges[359]<msg.ranges[0]:
-            #mass[aC][0]=0
-            #mass[aC][1]=0
-            #mass[aC][2]=msg.ranges[359]
-            mas[aC]=msg.ranges[359]
-            aC+=1
-            f_min=False  
-
-    for i in range (0,359):
-        if msg.ranges[i-1]<msg.ranges[i] or f_max:
-            f_max=True
-            if msg.ranges[i-1]>msg.ranges[i]:
-                #mass[aC][0]=1 
-                #mass[aC][1]=i
-                #mass[aC][2]=msg.ranges[i-1]
-                mas[aC]=msg.ranges[i-1]
-                aC+=1
-                f_max=False
-        if msg.ranges[i-1]>msg.ranges[0] or f_min:
-            f_min=True
-            if msg.ranges[i-1]<msg.ranges[0]:
-                #mass[aC][0]=0
-                #mass[aC][1]=i
-                #mass[aC][2]=msg.ranges[i-1]
-                mas[aC]=msg.ranges[i-1]
-                aC+=1
-                f_min=False
-    max(mass[1])
-'''
-
     global spdL 
     global spdR
     middleLidarPlank_90_270 = (msg.intensities[90] + msg.intensities[270]) / 2
     spdR = PID(middleLidarPlank_90_270, msg.intensities[90]) 
     spdL = PID(middleLidarPlank_90_270, msg.intensities[270])
+    '''
     #plt.plot(mas)
     #plt.pause(0.01)
     #plt.show()
@@ -128,8 +76,8 @@ if __name__ == '__main__':
         #msg_XL430L.z = IDK
         #msg_XL430L.z = IDK
 
-        rospy.loginfo("left = " + str(msg_XL430L.x))
-        rospy.loginfo("right = " + str(msg_XL430R.x))
+        #rospy.loginfo("left = " + str(msg_XL430L.x))
+        #rospy.loginfo("right = " + str(msg_XL430R.x))
 
         Publisher_XL430L.publish(msg_XL430L)
         Publisher_XL430R.publish(msg_XL430R)
