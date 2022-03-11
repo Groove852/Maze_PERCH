@@ -33,16 +33,16 @@ class Chanks(object):
         self.__createChanks()
         for i in range(0, 90):
             self._scanArray_first[[self.__map(self.__findY(self._scanArray[0 + i],  0 + i), 1, 10),
-                                  self.__map(self.__findX(self._scanArray[0 + i],  0 + i), 1, 10)]] = self._scanArray[0 + i]
+                                   self.__map(self.__findX(self._scanArray[0 + i],  0 + i), 1, 10)]] = self._scanArray[0 + i]
             
-            self._scanArray_second[self.__map(self.__findY(self._scanArray[90 + i],  90 + i), 1, 10),
-                                   self.__map(self.__findX(self._scanArray[90 + i],  90 + i), 1, 10)] = self._scanArray[90 + i]
+            self._scanArray_second[[self.__map(self.__findY(self._scanArray[90 + i],  90 + i), 1, 10),
+                                   self.__map(self.__findX(self._scanArray[90 + i],  90 + i), 1, 10)]] = self._scanArray[90 + i]
             
             self._scanArray_third[[self.__map(self.__findY(self._scanArray[180 + i],  180 + i), 1, 10),
                                    self.__map(self.__findX(self._scanArray[180 + i],  180 + i), 1, 10)]] = self._scanArray[180 + i]
             
-            self._scanArray_fourth[self.__map(self.__findY(self._scanArray[270 + i],  270 + i), 1, 10),
-                                   self.__map(self.__findX(self._scanArray[270 + i],  270 + i), 1, 10)] = self._scanArray[270 + i]
+            self._scanArray_fourth[[self.__map(self.__findY(self._scanArray[270 + i],  270 + i), 1, 10),
+                                   self.__map(self.__findX(self._scanArray[270 + i],  270 + i), 1, 10)]] = self._scanArray[270 + i]
         self.showWithIndex(1)
 
     def setScanArray(self, scan=np.arange(0, 360)):
@@ -59,7 +59,7 @@ class Chanks(object):
         else:
             print("Done!")
 
-    def __PID(target, current):
+    def __PID(self, target, current):
         mPID = mainPID(5, self._kp, self._ki, self._kd, 50, 265)
         return mPID.calc(current, target)
 
@@ -70,7 +70,7 @@ class Chanks(object):
         return distance * math.sin((index * math.pi) / 180)
 
     def __map(self, value, new_min, new_max):
-        return (((value - self._scanArray.min()) * (new_max - new_min)) / (self._scanArray.max() - self._scanArray.min())) + new_min
+        return int((((value - self._scanArray.min()) * (new_max - new_min)) / (self._scanArray.max() - self._scanArray.min())) + new_min)
 
     def showWithIndex(self, id):
         allChank = {
@@ -93,36 +93,19 @@ class Chanks(object):
 
     def __createChanks(self):
         self._scanArray = self._scanArray.reshape(4, 90)
-        """self._scanArray_first = pd.DataFrame(np.array(self._scanArray[0, :]).reshape(9, 10),
- 
-                                             index=[1, 2, 3, 4,
-                                                    5, 6, 7, 8, 9],
- 
-                                             columns=[1, 2, 3, 4, 5,
-                                                      6, 7, 8, 9, 10])
+        self._scanArray_first = pd.DataFrame(np.array(self._scanArray[0, :]).reshape(9, 10),
+                                             index=[1, 2, 3, 4,5, 6, 7, 8, 9],
+                                             columns=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         self._scanArray_second = pd.DataFrame(np.array(self._scanArray[1, :]).reshape(9, 10),
- 
-                                              index=[1, 2, 3, 4,
-                                                     5, 6, 7, 8, 9],
- 
-                                              columns=[-1, -2, -3, -4, -5,
-                                                       -6, -7, -8, -9, -10])
+                                              index=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+                                              columns=[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10])
         self._scanArray_third = pd.DataFrame(np.array(self._scanArray[2, :]).reshape(9, 10),
- 
-                                             index=[-1, -2, -3, -4,
-                                                    -5, -6, -7, -8, -9],
- 
-                                             columns=[-1, -2, -3, -4, -5,
-                                                      -6, -7, -8, -9, -10])
+                                             index=[-1, -2, -3, -4, -5, -6, -7, -8, -9],
+                                             columns=[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10])
         self._scanArray_fourth = pd.DataFrame(np.array(self._scanArray[3, :]).reshape(9, 10),
- 
-                                              index=[-1, -2, -3, -4,
-                                                     -5, -6, -7, -8, -9],
- 
-                                              columns=[1, 2, 3, 4, 5,
-                                                       6, 7, 8, 9, 10])
-        """
-        self._scanArray_first = np.array(self._scanArray[0, :]).reshape(9, 10)
+                                              index=[-1, -2, -3, -4, -5, -6, -7, -8, -9],
+                                              columns=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        """self._scanArray_first = np.array(self._scanArray[0, :]).reshape(9, 10)
         self._scanArray_second = np.array(self._scanArray[1, :]).reshape(9, 10)
         self._scanArray_third = np.array(self._scanArray[2, :]).reshape(9, 10)
-        self._scanArray_fourth = np.array(self._scanArray[3, :]).reshape(9, 10)
+        self._scanArray_fourth = np.array(self._scanArray[3, :]).reshape(9, 10)"""
