@@ -2,13 +2,16 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import pandas as pd
+from pandas import DataFrame as df
 
 from PIDcontroller.PIDAutotune import PIDAutotune as autoPID
 from PIDcontroller.PID import PID as mainPID
 
 
 plt.style.use("bmh")
-
+#from findXY send none if 5 < value or -5 > value
+#create 10 on 10 chanks
+#buffer on 5 values for any 
 
 class Chanks(object):
     _count = 0
@@ -22,6 +25,8 @@ class Chanks(object):
     _scanArray_second = None
     _scanArray_third = None
     _scanArray_fourth = None
+    _scanChank = None
+    _arrayXY = []
     _fig, _ax = plt.subplots()
 
     def __init__(self, kp, ki, kd):
@@ -30,22 +35,29 @@ class Chanks(object):
         self._kd = kd
 
     def calculate(self):
+        self._arrayXY = []
         self.__createChanks()
         for i in range(0, 90):
-            self._scanArray_first[[self.__map(self.__findY(self._scanArray[0 + i],  0 + i), 1, 10),
-                                   self.__map(self.__findX(self._scanArray[0 + i],  0 + i), 1, 10)]] = self._scanArray[0 + i]
-            
-            self._scanArray_second[[self.__map(self.__findY(self._scanArray[90 + i],  90 + i), 1, 10),
-                                   self.__map(self.__findX(self._scanArray[90 + i],  90 + i), 1, 10)]] = self._scanArray[90 + i]
-            
-            self._scanArray_third[[self.__map(self.__findY(self._scanArray[180 + i],  180 + i), 1, 10),
-                                   self.__map(self.__findX(self._scanArray[180 + i],  180 + i), 1, 10)]] = self._scanArray[180 + i]
-            
-            self._scanArray_fourth[[self.__map(self.__findY(self._scanArray[270 + i],  270 + i), 1, 10),
-                                   self.__map(self.__findX(self._scanArray[270 + i],  270 + i), 1, 10)]] = self._scanArray[270 + i]
-        self.showWithIndex(1)
+            try:
+                self._arrayXY.append([self.__findX(self._scanArray[i], i),self.__findY(self._scanArray[i], i)])
+                self._scanArray_first[abs(self.__findX(self.__map(self._scanArray[i], 1, 7, self._scanArray[0:90].min(), self._scanArray[0:90].max()), i)),
+                                    abs(self.__findY(self.__map(self._scanArray[i], 1, 7, self._scanArray[0:90].min(), self._scanArray[0:90].max()), i))] += 1#int(self._scanArray[i] / 1000)
 
-    def setScanArray(self, scan=np.arange(0, 360)):
+                self._scanArray_second[(self.__findX(self.__map(self._scanArray[90 + i], 1, 7, self._scanArray[90:180].min(), self._scanArray[90:180].max()), 90 + i)),
+                                    abs(self.__findY(self.__map(self._scanArray[90 + i], 1, 7, self._scanArray[90:180].min(), self._scanArray[90:180].max()), 90 + i))] += 1#int(self._scanArray[i] / 1000)
+
+                self._scanArray_third[(self.__findX(self.__map(self._scanArray[180 + i], 1, 7, self._scanArray[180:270].min(), self._scanArray[180:270].max()), 180 + i)),
+                                    (self.__findY(self.__map(self._scanArray[180 + i], 1, 7, self._scanArray[180:270].min(), self._scanArray[180:270].max()), 180 + i))] += 1#int(self._scanArray[i] / 1000)
+
+                self._scanArray_fourth[abs(self.__findX(self.__map(self._scanArray[270 + i], 1, 7, self._scanArray[270:360].min(), self._scanArray[270:360].max()), 270 + i)),
+                                    (self.__findY(self.__map(self._scanArray[270 + i], 1, 7, self._scanArray[270:360].min(), self._scanArray[270:360].max()), 270 + i))] += 1#int(self._scanArray[i] / 1000)
+            except:
+                pass
+        #print(self._scanArray[0:90])
+        self.showAll()
+        #print(np.array(self._arrayXY[0:90])/1000)
+
+    def setScanArray(self, scan):
         self._scanArray = np.array(scan)
 
     def getSpeed(self):
@@ -64,24 +76,32 @@ class Chanks(object):
         return mPID.calc(current, target)
 
     def __findY(self, distance, index):
-        return distance * math.cos((index * math.pi) / 180)
+        return int(distance * math.cos((index * math.pi) / 180))
 
     def __findX(self, distance, index):
-        return distance * math.sin((index * math.pi) / 180)
+        return int(distance * math.sin((index * math.pi) / 180))
 
-    def __map(self, value, new_min, new_max):
-        return int((((value - self._scanArray.min()) * (new_max - new_min)) / (self._scanArray.max() - self._scanArray.min())) + new_min)
+    def __map(self, value, new_min, new_max, old_min, old_max):
+        return ((value - old_min) * (new_max - new_min)) / (old_max - old_min) + new_min
 
     def showWithIndex(self, id):
         allChank = {
-            1: pd.DataFrame(self._scanArray_first,
-                            index=[1, 2, 3, 4, 5, 6, 7, 8, 9],
-                            columns=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-            2: self._scanArray_second,
-            3: self._scanArray_third,
-            4: self._scanArray_fourth
+            1: df(self._scanArray_first, index=[1, 2, 3, 4, 5], columns=[1, 2, 3, 4, 5]),
+            2: df(self._scanArray_second, index=[1, 2, 3, 4, 5], columns=[-1, -2, -3, -4, -5]),
+            3: df(self._scanArray_third, index=[-1, -2, -3, -4, -5], columns=[-1, -2, -3, -4, -5]),
+            4: df(self._scanArray_fourth, index=[-1, -2, -3, -4, -5], columns=[1, 2, 3, 4, 5])
         }
         print(allChank[id])
+
+    def showAll(self):
+        print(pd.concat([pd.concat([df(self._scanArray_second, index=[5, 4, 3, 2, 1], columns=[-5, -4, -3, -2, -1]),
+                        df(self._scanArray_first, index=[5, 4, 3, 2, 1], columns=[1, 2, 3, 4, 5])],
+                        axis=1).mean(),
+                        
+                        pd.concat([df(self._scanArray_third, index=[-1, -2, -3, -4, -5], columns=[-5, -4, -3, -2, -1]),
+                        df(self._scanArray_fourth, index=[-1, -2, -3, -4, -5], columns=[1, 2, 3, 4, 5])],
+                        axis=1).mean()],
+                        axis=0).mean())
 
     def showScatter(self, ScyOfPointsX, ScyOfPointsY=None):
         plt.ion()
@@ -92,20 +112,8 @@ class Chanks(object):
         plt.show()
 
     def __createChanks(self):
-        self._scanArray = self._scanArray.reshape(4, 90)
-        self._scanArray_first = pd.DataFrame(np.array(self._scanArray[0, :]).reshape(9, 10),
-                                             index=[1, 2, 3, 4,5, 6, 7, 8, 9],
-                                             columns=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        self._scanArray_second = pd.DataFrame(np.array(self._scanArray[1, :]).reshape(9, 10),
-                                              index=[1, 2, 3, 4, 5, 6, 7, 8, 9],
-                                              columns=[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10])
-        self._scanArray_third = pd.DataFrame(np.array(self._scanArray[2, :]).reshape(9, 10),
-                                             index=[-1, -2, -3, -4, -5, -6, -7, -8, -9],
-                                             columns=[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10])
-        self._scanArray_fourth = pd.DataFrame(np.array(self._scanArray[3, :]).reshape(9, 10),
-                                              index=[-1, -2, -3, -4, -5, -6, -7, -8, -9],
-                                              columns=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        """self._scanArray_first = np.array(self._scanArray[0, :]).reshape(9, 10)
-        self._scanArray_second = np.array(self._scanArray[1, :]).reshape(9, 10)
-        self._scanArray_third = np.array(self._scanArray[2, :]).reshape(9, 10)
-        self._scanArray_fourth = np.array(self._scanArray[3, :]).reshape(9, 10)"""
+        self._scanChank = np.zeros((4,25))
+        self._scanArray_first = np.array(self._scanChank[0, :]).reshape(5, 5)
+        self._scanArray_second = np.array(self._scanChank[1, :]).reshape(5, 5)
+        self._scanArray_third = np.array(self._scanChank[2, :]).reshape(5, 5)
+        self._scanArray_fourth = np.array(self._scanChank[3, :]).reshape(5, 5)
