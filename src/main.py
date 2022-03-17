@@ -13,19 +13,17 @@ chanksAlg = algS(2, 1, 1)
 simpleAlg = algD()
 
 def scan_callback(msg):
-    """global simpleAlg
-    simpleAlg.calculate(msg.ranges)"""
-    global chanksAlg
+    global simpleAlg
+    simpleAlg.launch(msg.ranges)
+
+    """global chanksAlg
     chanksAlg.setScanArray(msg.intensities)
     chanksAlg.calculate()
-
+"""
 def temp_callback(msg):
     return
 
 def battery_callback(msg):
-    return
-
-def starting():
     return
 
 def main():
@@ -46,15 +44,16 @@ def main():
         #msg_XL430L.y, msg_XL430R.y = 1, 2 # ID
         #msg_XL430L.x, msg_XL430R.x = chanksAlg.getSpeed() # Speed
 
-        msg_XL430L, msg_XL430R = simpleAlg.getSpeed() # Speed
+        #msg_XL430L, msg_XL430R = simpleAlg.getSpeed() 
+        #msg_XL430L, msg_XL430R = chanksAlg.getSpeed() # Speed
         # msg_XL430L.z = IDK
         # msg_XL430L.z = IDK
         #rospy.loginfo("left = " + str(msg_XL430L))
         #rospy.loginfo("right = " + str(msg_XL430R))
         #msg_XL430L = 50
         #msg_XL430R = 50
-        Publisher_XL430L.publish(msg_XL430L)
-        Publisher_XL430R.publish(msg_XL430R)
+        #Publisher_XL430L.publish(msg_XL430L)
+        #Publisher_XL430R.publish(msg_XL430R)
         
 
 

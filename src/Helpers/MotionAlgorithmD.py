@@ -14,7 +14,7 @@ mass[i][3] - time of uppering and lowering
 ''' 
 
 
-class Algorithm:
+class Algorithm(object):
     _spdL = 0
     _spdR = 0
     _fMax = False
@@ -23,8 +23,9 @@ class Algorithm:
     _tmp = 0
     _target = 0
     _targetPoint = 0
-    _mass = np.zeros((60, 4), np.int32)
-    
+    _mass = np.empty((0,4), np.int32)
+    _targets = np.array([])
+
 
     def __init__(self):
         return
@@ -36,8 +37,9 @@ class Algorithm:
         self._tmp = 0
         self._target = 0
         self._targetPoint = 0
-        self._mass = np.zeros((60, 4), np.int32)
-
+        self._mass = np.delete(self._mass)
+        self._targets = np.array((), np.int32)
+        
     def filter(self, array):
         if array[0] == 0:
             array[0] = array[359]
@@ -47,73 +49,92 @@ class Algorithm:
 
         return array
 
-    def findSMTH(self, array, i, f_value):
-        if array[i-1] < array[i] or f_value:
-            f_value = True
-            self._tmp += 1 
-            if array[i-1] > array[i]:
-                self.mass[self._aCounter, 0] = 1
-                self.mass[self._aCounter, 1] = i 
-                self.mass[self._aCounter, 2] = array[i-1] 
-                self.mass[self._aCounter, 3] = self._tmp
-                self._tmp = 0
-                self._aCounter += 1
-                f_value = False
+    def pullingMass(self, array):
+        for i in range (1,array.size):
+            if array[i-1] < array[i] or self._fMax:
+                self._fMax = True
+                self._tmp += 1 
+                if array[i-1] > array[i]:
+                    self._mass =  np.append(self._mass, np.array([[1, i, array[i-1], self._tmp]],  np.int32), axis = 0)
 
-    def calculate(self, msg_array):
-        calculatedArray = self.filter(np.array(msg_array) * 1000)
+                    """ self._mass[self._aCounter, 0] = 1
+                    self._mass[self._aCounter, 1] = i 
+                    self._mass[self._aCounter, 2] = array[i-1] 
+                    self._mass[self._aCounter, 3] = self._tmp"""
+                    self._tmp = 0
+                    #self._aCounter += 1
+                    self._fMax = False
+                    self._fMin = True
+            if array[i-1] > array[i] or self._fMin:
+                self._fMin = True
+                self._tmp += 1 
+                if array[i-1] < array[i]:
+                    self._mass = np.append(self._mass, np.array([[0, i, array[i-1], self._tmp]],  np.int32), axis = 0)
 
-        for i in range (1,360):
-            self.findSMTH(calculatedArray, i, self._fMax)
-            self.findSMTH(calculatedArray, i, self._fMin)
-            if calculatedArray[i-1] < calculatedArray[i] or self._fMax:
-                f_max=True
-                tmp+=1
+                    """self._mass[self._aCounter, 0] = 0
+                    self._mass[self._aCounter, 1] = i 
+                    self._mass[self._aCounter, 2] = array[i-1] 
+                    self._mass[self._aCounter, 3] = self._tmp"""
+                    self._tmp = 0
+                    #self._aCounter += 1
+                    self._fMin = False
+                    self._fMax = True
+ 
+        if self._fMax and array[359] > array[0]:
+            self._mass = np.append(self._mass, np.array([[1, 359, array[359], self._tmp]],  np.int32), axis = 0)
+
+            """self._mass[self._aCounter, 0] = 1
+            self._mass[self._aCounter, 1] = 359 
+            self._mass[self._aCounter, 2] = array[359] 
+            self._mass[self._aCounter, 3] = self._tmp"""
+            self._tmp = 0
+            #self._aCounter += 1
+        if self._fMin and array[359] < array[0]:
+            self._mass = np.append(self._mass, np.array([[0, 359, array[359], self._tmp]], np.int32), axis = 0)
+            
+            """self._mass[self._aCounter, 0] = 0
+            self._mass[self._aCounter, 1] = 359 
+            self._mass[self._aCounter, 2] = array[359] 
+            self._mass[self._aCounter, 3] = self._tmp
+            self._tmp = 0"""
+            #self._aCounter += 1
+        self._fMin = False
+        self._fMax = False
+
+    def findDirection(self, middle):
+        for i in range(0, 270): #self._mass.shape):
+            if self._mass[i][0] == 0 and self._mass[i][2] > middle:
+                self._targets = np.append(self._targets, self._mass[i][1])
+
+        for i in range(0,270):
+             if self._mass[i][0] == 0 and np.max(self._targets) == self._mass[i][1]:
+                 self._targetPoint = np.max(self._targets)
+
+
+    def launch(self, msg_array):
+        #self.clear()
+        calculatedArray = self.filter((np.array(msg_array) * 100))
+        self.pullingMass(calculatedArray)
+        #self.findDirection(calculatedArray.mean())
         
-        if mass[0,0]==1:
-            for i in range(0,int(mass[0,1])):
-                if array[i-1]<array[i] or f_max:
-                    f_max=True
-                    tmp+=1
-                    if array[i-1]>array[i]:
-                        mass[aC,0]=1 #max
-                        mass[aC,1]=i #degree
-                        mass[aC,2]=array[i-1] #value
-                        mass[aC,3]=tmp #rangee of area
-                        tmp=0
-                        aC+=1
-                        f_max=False
+        """if self._targetPoint >= 357 or self._targetPoint <= 2:
+            self._spdL = 50
+            self._spdR = 50
+            time.sleep(0.5)
+        if self._targetPoint < 356 and self._targetPoint > 3 and self._targetPoint > 180:
+            self._spdL = 50
+            self._spdR = -50    
+        if self._targetPoint < 356 and self._targetPoint > 3 and self._targetPoint < 180:
+            self._spdL = -50
+            self._spdR = 50   """     
 
-                if array[i-1]>array[i] or f_min:
-                    f_min=True
-                    tmp+=1
-                    if array[i-1]<array[i]:
-                        mass[aC,0]=0 #min
-                        mass[aC,1]=i #degree
-                        mass[aC,2]=array[i-1] #value
-                        mass[aC,3]=tmp #rangee of area
-                        tmp=0
-                        aC+=1
-                        f_min=False
+        self.show()
 
-        for i in range(0, 60):
-            if mass[i][0] == 0 and mass[i][2]>target: 
-                target = mass[i][1] 
 
-        if targetPoint == (mass[0][1] or mass[1][1] or mass[359][1]):
-                self._spdL = 50
-                self._spdR = 50
-                time.sleep(5)
-        else:
-            if targetPoint <= 180:
-                self._spdL = 0
-                self._spdR = 50
-            else:
-                self._spdL = 0
-                self._spdR = 50     
-        #print(mass)
-        #print(middle)
-        #print(targetPoint)
+    def show(self):
+        print(self._mass)
+        #print(self._targets)
+        #print(self._targetPoint)
         #print(self._spdL)
         #print(self._spdR)
 
