@@ -24,10 +24,10 @@ class Chanks(object):
     _kd = 0 
 
     _scanArray = None
-    _scanArray_first = None
-    _scanArray_second = None
-    _scanArray_third = None
-    _scanArray_fourth = None
+    _scanArray_back = None
+    _scanArray_left = None
+    _scanArray_forward = None
+    _scanArray_right = None
 
     _scanChank = None
 
@@ -51,47 +51,63 @@ class Chanks(object):
         self._arrayXY = []
         self.__createChanks()
         for i in range(0, 90):
-            try:
-                self._arrayXY.append([self.__findX(self._scanArray[i], i),self.__findY(self._scanArray[i], i)])
-                self._scanArray_first[abs(self.__findX(self.__map(self._scanArray[i], 1, 7, self._scanArray[0:90].min(), self._scanArray[0:90].max()), i)),
-                                    abs(self.__findY(self.__map(self._scanArray[i], 1, 7, self._scanArray[0:90].min(), self._scanArray[0:90].max()), i))] += 1 + int(self._scanArray[i])
+            self._arrayXY.append([self.__findX(self._scanArray[i], i),self.__findY(self._scanArray[i], i)])
+            self._scanArray_back[abs(self.__findX(self.__map(self._scanArray[i if (i < 46) else 270 + i], 1, 5, np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).min(), np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).max()), i if (i < 46) else 270 + i)),
+                                abs(self.__findY(self.__map(self._scanArray[i if (i < 46) else 270 + i], 1, 5, np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).min(),  np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).max()), i if (i < 46) else 270 + i))] += 1 + int(self._scanArray[i if (i < 46) else 270 + i] * 100)
 
-                self._scanArray_second[(self.__findX(self.__map(self._scanArray[90 + i], 1, 7, self._scanArray[90:180].min(), self._scanArray[90:180].max()), 90 + i)),
-                                    abs(self.__findY(self.__map(self._scanArray[90 + i], 1, 7, self._scanArray[90:180].min(), self._scanArray[90:180].max()), 90 + i))] += 1 + int(self._scanArray[90 + i])
+            self._scanArray_left[(self.__findX(self.__map(self._scanArray[45 + i], 1, 5, self._scanArray[45:135].min(), self._scanArray[45:135].max()), 45 + i)),
+                                abs(self.__findY(self.__map(self._scanArray[45 + i], 1, 5, self._scanArray[45:135].min(), self._scanArray[45:135].max()), 45 + i))] += 1 + int(self._scanArray[45 + i] * 100)
 
-                self._scanArray_third[(self.__findX(self.__map(self._scanArray[180 + i], 1, 7, self._scanArray[180:270].min(), self._scanArray[180:270].max()), 180 + i)),
-                                    (self.__findY(self.__map(self._scanArray[180 + i], 1, 7, self._scanArray[180:270].min(), self._scanArray[180:270].max()), 180 + i))] += 1 + int(self._scanArray[i + 180])
+            self._scanArray_forward[(self.__findX(self.__map(self._scanArray[135 + i], 1, 5, self._scanArray[135:225].min(), self._scanArray[135:225].max()), 135 + i)),
+                                (self.__findY(self.__map(self._scanArray[135 + i], 1, 5, self._scanArray[135:225].min(), self._scanArray[135:225].max()), 135 + i))] += 1 + int(self._scanArray[i + 135] * 100)
 
-                self._scanArray_fourth[abs(self.__findX(self.__map(self._scanArray[270 + i], 1, 7, self._scanArray[270:360].min(), self._scanArray[270:360].max()), 270 + i)),
-                                    (self.__findY(self.__map(self._scanArray[270 + i], 1, 7, self._scanArray[270:360].min(), self._scanArray[270:360].max()), 270 + i))] += 1 + int(self._scanArray[i + 270])
-            except:
-                pass
+            self._scanArray_right[abs(self.__findX(self.__map(self._scanArray[225 + i], 1, 5, self._scanArray[225:315].min(), self._scanArray[225:315].max()), 225 + i)),
+                                (self.__findY(self.__map(self._scanArray[225 + i], 1, 5, self._scanArray[225:315].min(), self._scanArray[225:315].max()), 225 + i))] += 1 + int(self._scanArray[i + 225] * 100)
 
-            self._frstK = self._scanArray_first.mean() * 1000
-            self._scndK = self._scanArray_second.mean() * 1000
-            self._thrdK = self._scanArray_third.mean() * 1000
-            self._frthK = self._scanArray_fourth.mean() * 1000
+        self._frstK = self._scanArray_back.mean()
+        self._scndK = self._scanArray_left.mean()
+        self._thrdK = self._scanArray_forward.mean()
+        self._frthK = self._scanArray_right.mean()
+        
+        print(f'Cov with left and right: {round(np.cov(self._scanArray_left, self._scanArray_right).sum()/1000)}')
+        print(f'Cov with left and forward: {round(np.cov(self._scanArray_left, self._scanArray_forward).sum()/1000)}')
+        print(f'Cov with left and back: {round(np.cov(self._scanArray_left, self._scanArray_back).sum()/1000)}')
+        print(f'Cov with right and forward: {round(np.cov(self._scanArray_right, self._scanArray_forward).sum()/1000)}')
+        print(f'Cov with right and back: {round(np.cov(self._scanArray_right, self._scanArray_back).sum()/1000)}')
+        print(f'Cov with forward and back: {round(np.cov(self._scanArray_forward, self._scanArray_back).sum()/1000)}')
+        print()
+        self._leftCount = int(round((self._frstK - self._scndK) / 7))
+        self._rightCount = int(round((self._thrdK - self._frthK) / 7))
 
-            self._leftCount = int(round((self._frstK - self._scndK) / 7))
-            self._rightCount = int(round((self._thrdK - self._frthK) / 7))
+        # self._spdR = int(self.__map(self._rightCount, 0, 255, 0, 150))
+        # self._spdL = int(self.__map(self._leftCount, 0, 255, 0, 150))
 
-            if ((self._leftCount== 0) and (self._rightCount == 0)): self._leftCount, self._rightCount = 50, 50
 
-            self._spdR = self.__map(self._leftCount, 0, 255, 0, 150)
-            self._spdL = self.__map(self._rightCount, 0, 255, 0, 150)
-
-            #print(f'Left side :{self._leftCount}')
-            #print(f'Right side :{self._rightCount}')
 
         #print(self._scanArray[0:90])
         #self.showAll()
         #print(np.array(self._arrayXY[0:90])/1000)
 
     def setScanArray(self, scan):
-        self._scanArray = pd.Series(np.array(scan))
+        self._scanArray = np.array(scan)
 
     def getSpeed(self):
-        return self._spdL, self._spdR
+        return self.__ABCmap(self._spdL, 0, 255, -100, 100), self.__ABCmap(self._spdR, 0, 255, -100, 100)
+
+    def covariance(self, a, b):
+        
+        if len(a) != len(b):
+            return
+
+        a_mean = np.mean(a)
+        b_mean = np.mean(b)
+
+        sum = 0
+
+        for i in range(0, len(a)):
+            sum += ((a[i] - a_mean) * (b[i] - b_mean))
+
+        return sum/(len(a)-1)
 
     def saveDataSet_to_Csv(self, value):
         if self._count < value:
@@ -114,22 +130,25 @@ class Chanks(object):
     def __map(self, value, new_min, new_max, old_min, old_max):
         return ((value - old_min) * (new_max - new_min)) / (old_max - old_min) + new_min
 
+    def __ABCmap(self, value, new_min, new_max, old_min, old_max):
+        return abs(((value - old_min) * (new_max - new_min)) / (old_max - old_min) + new_min)
+
     def showWithIndex(self, id):
         allChank = {
-            1: df(self._scanArray_first, index=[1, 2, 3, 4, 5], columns=[1, 2, 3, 4, 5]),
-            2: df(self._scanArray_second, index=[1, 2, 3, 4, 5], columns=[-1, -2, -3, -4, -5]),
-            3: df(self._scanArray_third, index=[-1, -2, -3, -4, -5], columns=[-1, -2, -3, -4, -5]),
-            4: df(self._scanArray_fourth, index=[-1, -2, -3, -4, -5], columns=[1, 2, 3, 4, 5])
+            1: df(self._scanArray_back, index=[1, 2, 3, 4, 5], columns=[1, 2, 3, 4, 5]),
+            2: df(self._scanArray_left, index=[1, 2, 3, 4, 5], columns=[-1, -2, -3, -4, -5]),
+            3: df(self._scanArray_forward, index=[-1, -2, -3, -4, -5], columns=[-1, -2, -3, -4, -5]),
+            4: df(self._scanArray_right, index=[-1, -2, -3, -4, -5], columns=[1, 2, 3, 4, 5])
         }
         print(allChank[id])
 
     def showAll(self):
-        print(pd.concat([pd.concat([df(self._scanArray_second, index=[5, 4, 3, 2, 1], columns=[-5, -4, -3, -2, -1]),
-                        df(self._scanArray_first, index=[5, 4, 3, 2, 1], columns=[1, 2, 3, 4, 5])],
+        print(pd.concat([pd.concat([df(self._scanArray_left, index=[5, 4, 3, 2, 1], columns=[-5, -4, -3, -2, -1]),
+                        df(self._scanArray_back, index=[5, 4, 3, 2, 1], columns=[1, 2, 3, 4, 5])],
                         axis=1),
                         
-                        pd.concat([df(self._scanArray_third, index=[-1, -2, -3, -4, -5], columns=[-5, -4, -3, -2, -1]),
-                        df(self._scanArray_fourth, index=[-1, -2, -3, -4, -5], columns=[1, 2, 3, 4, 5])],
+                        pd.concat([df(self._scanArray_forward, index=[-1, -2, -3, -4, -5], columns=[-5, -4, -3, -2, -1]),
+                        df(self._scanArray_right, index=[-1, -2, -3, -4, -5], columns=[1, 2, 3, 4, 5])],
                         axis=1)],
                         axis=0))
 
@@ -143,7 +162,7 @@ class Chanks(object):
 
     def __createChanks(self):
         self._scanChank = np.zeros((4,25))
-        self._scanArray_first = np.array(self._scanChank[0, :]).reshape(5, 5)
-        self._scanArray_second = np.array(self._scanChank[1, :]).reshape(5, 5)
-        self._scanArray_third = np.array(self._scanChank[2, :]).reshape(5, 5)
-        self._scanArray_fourth = np.array(self._scanChank[3, :]).reshape(5, 5)
+        self._scanArray_back = np.array(self._scanChank[0, :]).reshape(5, 5)
+        self._scanArray_left = np.array(self._scanChank[1, :]).reshape(5, 5)
+        self._scanArray_forward = np.array(self._scanChank[2, :]).reshape(5, 5)
+        self._scanArray_right = np.array(self._scanChank[3, :]).reshape(5, 5)
