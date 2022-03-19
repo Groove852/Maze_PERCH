@@ -13,8 +13,7 @@ chanksAlg = algS(2, 1, 1)
 simpleAlg = algD()
 
 def scan_callback(msg):
-    """global simpleAlg
-    simpleAlg.launch(msg.ranges)"""
+    #simpleAlg.launch(msg.ranges)
 
     chanksAlg.setScanArray(msg.ranges)
     chanksAlg.calculate()
@@ -34,7 +33,7 @@ def main():
     #Subscriber_Battery = rospy.Subscriber("/OpenCR/battery", BatteryState, callback=battery_callback)
     #Subscriber_Temp = rospy.Subscriber("/OpenCR/temp", Temperature, callback=temp_callback)
     Subscriber_Scan = rospy.Subscriber("/scan", LaserScan, callback=scan_callback)
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(20)
     i = 0
     while not rospy.is_shutdown():
         msg_XL430R = Int32
@@ -47,14 +46,16 @@ def main():
         msg_XL430L, msg_XL430R = chanksAlg.getSpeed() # Speed
         # msg_XL430L.z = IDK
         # msg_XL430L.z = IDK
-        #rospy.loginfo("left = " + str(msg_XL430L))
-        #rospy.loginfo("right = " + str(msg_XL430R))
+        rospy.loginfo("left = " + str(msg_XL430L))
+        rospy.loginfo("right = " + str(msg_XL430R))
         #msg_XL430L = 50
         #msg_XL430R = 50
         Publisher_XL430L.publish(msg_XL430L)
         Publisher_XL430R.publish(msg_XL430R)
+        rate.sleep()
         
 
 
 if __name__ == '__main__':
     main()
+

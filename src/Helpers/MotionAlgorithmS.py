@@ -29,6 +29,9 @@ class Chanks(object):
     _scanArray_forward = None
     _scanArray_right = None
 
+    _scanSTDleft = None
+    _scanSTDright = None
+
     _scanChank = None
 
     _frstK = 0
@@ -52,47 +55,59 @@ class Chanks(object):
         self.__createChanks()
         for i in range(0, 90):
             self._arrayXY.append([self.__findX(self._scanArray[i], i),self.__findY(self._scanArray[i], i)])
-            self._scanArray_back[abs(self.__findX(self.__map(self._scanArray[i if (i < 46) else 270 + i], 1, 5, np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).min(), np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).max()), i if (i < 46) else 270 + i)),
-                                abs(self.__findY(self.__map(self._scanArray[i if (i < 46) else 270 + i], 1, 5, np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).min(),  np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).max()), i if (i < 46) else 270 + i))] += 1 + int(self._scanArray[i if (i < 46) else 270 + i] * 100)
+            self._scanArray_back[abs(self.__findX(self.__map(self._scanArray[i if (i < 46) else 270 + i], 1, 4, np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).min(), np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).max()), i if (i < 46) else 270 + i)),
+                                abs(self.__findY(self.__map(self._scanArray[i if (i < 46) else 270 + i], 1, 4, np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).min(),  np.concatenate((self._scanArray[0:45], self._scanArray[315:359]), axis=0).max()), i if (i < 46) else 270 + i))] += self._scanArray[i if (i < 46) else 270 + i] * 100
 
-            self._scanArray_left[(self.__findX(self.__map(self._scanArray[45 + i], 1, 5, self._scanArray[45:135].min(), self._scanArray[45:135].max()), 45 + i)),
-                                abs(self.__findY(self.__map(self._scanArray[45 + i], 1, 5, self._scanArray[45:135].min(), self._scanArray[45:135].max()), 45 + i))] += 1 + int(self._scanArray[45 + i] * 100)
+            self._scanArray_left[(self.__findX(self.__map(self._scanArray[45 + i], 1, 4, self._scanArray[45:135].min(), self._scanArray[45:135].max()), 45 + i)),
+                                abs(self.__findY(self.__map(self._scanArray[45 + i], 1, 4, self._scanArray[45:135].min(), self._scanArray[45:135].max()), 45 + i))] += self._scanArray[45 + i] * 100
 
-            self._scanArray_forward[(self.__findX(self.__map(self._scanArray[135 + i], 1, 5, self._scanArray[135:225].min(), self._scanArray[135:225].max()), 135 + i)),
-                                (self.__findY(self.__map(self._scanArray[135 + i], 1, 5, self._scanArray[135:225].min(), self._scanArray[135:225].max()), 135 + i))] += 1 + int(self._scanArray[i + 135] * 100)
+            self._scanArray_forward[(self.__findX(self.__map(self._scanArray[135 + i], 1, 4, self._scanArray[135:225].min(), self._scanArray[135:225].max()), 135 + i)),
+                                (self.__findY(self.__map(self._scanArray[135 + i], 1, 4, self._scanArray[135:225].min(), self._scanArray[135:225].max()), 135 + i))] += self._scanArray[i + 135] * 100
 
-            self._scanArray_right[abs(self.__findX(self.__map(self._scanArray[225 + i], 1, 5, self._scanArray[225:315].min(), self._scanArray[225:315].max()), 225 + i)),
-                                (self.__findY(self.__map(self._scanArray[225 + i], 1, 5, self._scanArray[225:315].min(), self._scanArray[225:315].max()), 225 + i))] += 1 + int(self._scanArray[i + 225] * 100)
+            self._scanArray_right[abs(self.__findX(self.__map(self._scanArray[225 + i], 1, 4, self._scanArray[225:315].min(), self._scanArray[225:315].max()), 225 + i)),
+                                (self.__findY(self.__map(self._scanArray[225 + i], 1, 4, self._scanArray[225:315].min(), self._scanArray[225:315].max()), 225 + i))] += self._scanArray[i + 225] * 100
 
-        self._frstK = self._scanArray_back.mean()
-        self._scndK = self._scanArray_left.mean()
-        self._thrdK = self._scanArray_forward.mean()
-        self._frthK = self._scanArray_right.mean()
-        
-        print(f'Cov with left and right: {round(np.cov(self._scanArray_left, self._scanArray_right).sum()/1000)}')
-        print(f'Cov with left and forward: {round(np.cov(self._scanArray_left, self._scanArray_forward).sum()/1000)}')
-        print(f'Cov with left and back: {round(np.cov(self._scanArray_left, self._scanArray_back).sum()/1000)}')
-        print(f'Cov with right and forward: {round(np.cov(self._scanArray_right, self._scanArray_forward).sum()/1000)}')
-        print(f'Cov with right and back: {round(np.cov(self._scanArray_right, self._scanArray_back).sum()/1000)}')
-        print(f'Cov with forward and back: {round(np.cov(self._scanArray_forward, self._scanArray_back).sum()/1000)}')
-        print()
-        self._leftCount = int(round((self._frstK - self._scndK) / 7))
-        self._rightCount = int(round((self._thrdK - self._frthK) / 7))
-
-        # self._spdR = int(self.__map(self._rightCount, 0, 255, 0, 150))
-        # self._spdL = int(self.__map(self._leftCount, 0, 255, 0, 150))
+        # print(f'Cov with left and right: {round(np.cov(self._scanArray_left, self._scanArray_right).sum()/1000)}')
+        # print(f'Cov with left and forward: {round(np.cov(self._scanArray_left, self._scanArray_forward).sum()/1000)}')
+        # print(f'Cov with left and back: {round(np.cov(self._scanArray_left, self._scanArray_back).sum()/1000)}')
+        # print(f'Cov with right and forward: {round(np.cov(self._scanArray_right, self._scanArray_forward).sum()/1000)}')
+        # print(f'Cov with right and back: {round(np.cov(self._scanArray_right, self._scanArray_back).sum()/1000)}')
+        # print(f'Cov with forward and back: {round(np.cov(self._scanArray_forward, self._scanArray_back).sum()/1000)}')
 
 
+        # print(f'Left sum = {self._scanArray_left.sum()}')
+        # print(f'Right sum = {self._scanArray_right.sum()}')
+        # print(f'Left std = {np.std(self._scanArray_left, dtype=np.int32)}')
+        # print(f'Right std = {np.std(self._scanArray_right, dtype=np.int32)}')
+        # print(f'Back std = {np.std(self._scanArray_back, dtype=np.int32)}')
+        # print(f'Forward std = {np.std(self._scanArray_forward, dtype=np.int32)}')
+
+        self._scanSTDleft = np.std(self._scanArray_left, dtype=np.int32) - (np.std(self._scanArray_back, dtype=np.int32) + np.std(self._scanArray_forward, dtype=np.int32)) / 2
+        self._scanSTDright = np.std(self._scanArray_right, dtype=np.int32) - (np.std(self._scanArray_back, dtype=np.int32) + np.std(self._scanArray_forward, dtype=np.int32)) / 2
+
+        self._leftCount = int((np.cov(self._scanArray_left, self._scanArray_forward).sum() + np.cov(self._scanArray_left, self._scanArray_back).sum()) / 2000)
+        self._rightCount = int((np.cov(self._scanArray_right, self._scanArray_forward).sum() + np.cov(self._scanArray_right, self._scanArray_back).sum()) / 2000)
+
+        self._leftCountTest = int((np.cov(self._scanArray_left, self._scanArray_forward, bias=True).sum() + np.cov(self._scanArray_left, self._scanArray_back, bias=True).sum()) / 2000)
+        self._rightCountTest = int((np.cov(self._scanArray_right, self._scanArray_forward, bias=True).sum() + np.cov(self._scanArray_right, self._scanArray_back, bias=True).sum()) / 2000)
+
+        self._spdR = self.__map(self._rightCountTest - self._leftCountTest, -10 * self._leftCount/self._leftCountTest, 10 * self._rightCount / self._rightCountTest, self._leftCount, self._rightCount)
+        self._spdL = self.__map(self._leftCountTest - self._rightCountTest, -10 * self._leftCount/self._leftCountTest, 10 * self._rightCount / self._rightCountTest, self._leftCount, self._rightCount)
+
+        # print(f'Left count = {self._leftCount}, Right count = {self._rightCount}')
+        # print(f'Left count test = {self._leftCountTest}, Right count test = {self._rightCountTest}')
+        # print(f'Attitude left = {self._leftCount/self._leftCountTest}, Attitude right = {self._rightCount/self._rightCountTest}')
 
         #print(self._scanArray[0:90])
         #self.showAll()
         #print(np.array(self._arrayXY[0:90])/1000)
+        #print()
 
     def setScanArray(self, scan):
         self._scanArray = np.array(scan)
 
     def getSpeed(self):
-        return self.__ABCmap(self._spdL, 0, 255, -100, 100), self.__ABCmap(self._spdR, 0, 255, -100, 100)
+        return int(self._spdL) if self._spdL > self._spdR else int(self._spdL * (-0.1)), int(self._spdR) if self._spdR > self._spdL else int(self._spdR * (-0.1))
 
     def covariance(self, a, b):
         
