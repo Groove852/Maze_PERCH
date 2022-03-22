@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#from asyncio.windows_events import NULL
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -50,7 +51,7 @@ class Algorithm(object):
         return array
 
     def pullingMass(self, array):
-        for i in range (0,array.size):
+        for i in range (-2,array.size):
             if array[i-1] < array[i] or self._fMax:
                 self._fMax = True
                 self._tmp += 1 
@@ -67,25 +68,22 @@ class Algorithm(object):
                     self._tmp = 0
                     self._fMin = False
                     self._fMax = True
- 
-        """if self._fMax and array[359] > array[0]:
-            self._mass = np.append(self._mass, np.array([[1, 359, array[359], self._tmp]],  np.int32), axis = 0)
-            self._tmp = 0
-        if self._fMin and array[359] < array[0]:
-            self._mass = np.append(self._mass, np.array([[0, 359, array[359], self._tmp]], np.int32), axis = 0)"""
+            if array[i-1] < array[i] or self._fMax:
+                self._fMax = True
+                self._tmp += 1
+
 
         self._fMin = False
         self._fMax = False
 
     def findDirection(self, middle):
-        try:
-            for i in range(0, self._mass.shape[0]): 
-                if self._mass[i][0] == 0 and self._mass[i][2] > middle:
-                    self._targets = np.append(self._targets, self._mass[i][1])
+        
+        for i in range(0, self._mass.shape[0]): 
+            if self._mass[i][0] == 0 and self._mass[i][2] > 180:
+                self._targets = np.append(self._targets, self._mass[i][1])
+            
 
-            for i in range(0,self._mass.shape[0]):
-                if self._mass[i][0] == 0 and np.max(self._targets) == self._mass[i][1]:
-                    self._targetPoint = np.max(self._targets)
+        if self._targets.size != 0:
 
             clearTargets = np.array([])
             tmp = 0
@@ -103,80 +101,59 @@ class Algorithm(object):
                     tmp = 0
                     counter = 0
 
-            if self._targets[self._targets.size-1] - self._targets[0] <= n:
-                    tmp += self._targets[self._targets.size-1]
+            if abs(self._targets[0] + (360 - self._targets[self._targets.size-1])) <= n:
+                    tmp += (360 - self._targets[self._targets.size-1]) + clearTargets[0]
+                    clearTargets = np.delete(clearTargets, 0)
+                    counter += 2
+                    clearTargets = np.append(clearTargets, int(tmp/counter))
+                    tmp = 0
+                    counter = 0
+            if abs(self._targets[0] + (360 - self._targets[-1])) > n and tmp == 0:    
+                    clearTargets = np.append(clearTargets, self._targets[-1])
+            if abs(self._targets[0] + (360 - self._targets[-1])) > n and tmp != 0:    
+                    tmp += self._targets[-1]
                     counter += 1
                     clearTargets = np.append(clearTargets, int(tmp/counter))
                     tmp = 0
                     counter = 0
-            if self._targets[self._targets.size-1] - self._targets[0] > n and tmp == 0:    
-                    clearTargets = np.append(clearTargets, self._targets[self._targets.size-1])
-            if self._targets[self._targets.size-1] - self._targets[0] > n and tmp != 0:    
-                    clearTargets = np.append(clearTargets, int(tmp/counter))
-                    tmp = 0
-                    counter = 0
-        except:
-            pass
-        return clearTargets                        
+            self._targetPoint = clearTargets.max()        
+
+            return clearTargets 
+        else:
+            self._targetPoint = 0
+            return [0]                          
 
     def launch(self, msg_array):
         self.clear()
+        #print(msg_array)
         calculatedArray = self.filter((np.array(msg_array) * 1000))
         self.pullingMass(calculatedArray)
         array = np.array((self.findDirection(calculatedArray.mean())), np.int32)
         
-        """
-        try: 
-            if array[0] >= 350 or array[0] <= 10:
-                self._spdL = 50
-                self._spdR = 50
-            else:
-                self._spdL = -25
-                self._spdR = 25
+        if self._targetPoint >= 350 or self._targetPoint <= 10:
+            self._spdL = 50
+            self._spdR = 50
+        elif self._targetPoint < 180:
+            self._spdL = -25
+            self._spdR = 25
+        elif self._targetPoint >= 180:
+            self._spdL = 25
+            self._spdR = -25    
                    
-        except:
-            self._spdL = 20
-            self._spdR = 20"""
 
-        self._spdL = 20
-        self._spdR = 20
-        """for i in range (0, array.size):
-            if array[i] >= 357 or array[i] <= 2:
-                self._spdL = 50
-                self._spdR = 50
-                break
-                #print(self._spdL)
-                #print(self._spdR)
-                time.sleep(1)
-                self._spdL = 0
-                self._spdR = 0
-                #print(self._spdL)
-                #print(self._spdR)
-                #time.sleep(1)
-            else:
-                self._spdL = 25
-                self._spdR = -25
-                #print(self._spdL)
-                #print(self._spdR)
-                #time.sleep(1)
-                #print(self._spdL)
-                #print(self._spdR)
-                #self._spdL = 0
-                #self._spdR = 0
-                #time.sleep(1)"""
+        
 
-
-        #self.show(array)
+        self.show(array)
 
 
     def show(self, array):
-        #print(self._mass)
+        print(self._mass)
         #print(self._mass.mean())
-        #print(self._targets)
+        print(self._targets)
         print(array)
         #print(self._targetPoint)
-        print(self._spdL)
-        print(self._spdR)
+        #print(self._spdL)
+        #print(self._spdR)
 
 
     

@@ -1,3 +1,4 @@
+from uuid import RFC_4122
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -42,7 +43,10 @@ class Chanks(object):
     _leftCount = 0
     _rightCount = 0
 
-    _arrayXY = []
+    _arrayXY = [] 
+    _bufCount = 0
+    _leftBuffer = np.zeros(21)
+    _rightBuffer = np.zeros(11)
     _fig, _ax = plt.subplots()
 
     def __init__(self, kp, ki, kd):
@@ -51,6 +55,8 @@ class Chanks(object):
         self._kd = kd
 
     def calculate(self):
+        self.__findX = np.vectorize(self.X)
+        self.__findY = np.vectorize(self.Y)
         self._arrayXY = []
         self.__createChanks()
         for i in range(0, 90):
@@ -67,47 +73,57 @@ class Chanks(object):
             self._scanArray_right[abs(self.__findX(self.__map(self._scanArray[225 + i], 1, 4, self._scanArray[225:315].min(), self._scanArray[225:315].max()), 225 + i)),
                                 (self.__findY(self.__map(self._scanArray[225 + i], 1, 4, self._scanArray[225:315].min(), self._scanArray[225:315].max()), 225 + i))] += self._scanArray[i + 225] * 100
 
-        # print(f'Cov with left and right: {round(np.cov(self._scanArray_left, self._scanArray_right).sum()/1000)}')
-        # print(f'Cov with left and forward: {round(np.cov(self._scanArray_left, self._scanArray_forward).sum()/1000)}')
-        # print(f'Cov with left and back: {round(np.cov(self._scanArray_left, self._scanArray_back).sum()/1000)}')
-        # print(f'Cov with right and forward: {round(np.cov(self._scanArray_right, self._scanArray_forward).sum()/1000)}')
-        # print(f'Cov with right and back: {round(np.cov(self._scanArray_right, self._scanArray_back).sum()/1000)}')
-        # print(f'Cov with forward and back: {round(np.cov(self._scanArray_forward, self._scanArray_back).sum()/1000)}')
+        LF = int(np.cov(self._scanArray_left, self._scanArray_forward).mean() / 1000)
+        LR = int(np.cov(self._scanArray_left, self._scanArray_right).mean() / 1000)
+        LB = int(np.cov(self._scanArray_left, self._scanArray_back).mean() / 1000)
+        
+        RF = int(np.cov(self._scanArray_right, self._scanArray_forward).mean() / 1000)
+        RL = int(np.cov(self._scanArray_right, self._scanArray_left).mean() / 1000)
+        RB = int(np.cov(self._scanArray_right, self._scanArray_back).mean() / 1000)
+        
+        sr = np.cov([RF, RL, RB], [LF, LR, LB]).sum()
+        mn = np.cov([RF, RL, RB], [LF, LR, LB]).mean()
+        
+        mn_cor = np.correlate([RF, RL, RB], [LF, LR, LB])
+        sr_cor = np.correlate([RF, RL, RB], [LF, LR, LB])
+        
+        LF_cor = 0
+        RF_cor = 0
+        
+        for i in range(0, 5):
+            LF_cor += np.correlate(self._scanArray_left[i], self._scanArray_forward[i])
+            RF_cor += np.correlate(self._scanArray_right[i], self._scanArray_forward[i])
+        
+        LF_cor /= ((mn / sr) + (mn_cor / sr_cor))
+        LF_cor += 1
+        RF_cor /= ((mn / sr) + (mn_cor / sr_cor))
+        RF_cor += 1
+        
+        self._spdL = (LF_cor / RF_cor) * 50
+        self._spdR = (RF_cor / LF_cor)  * 50
+        
+        if self._bufCount + 1 == 10:
+            self._bufCount = 0
+        else:
+            self._bufCount += 1
+        
+        
 
+        self._leftBuffer[self._bufCount] = self._spdL
+        self._rightBuffer[self._bufCount] = self._spdR
 
-        # print(f'Left sum = {self._scanArray_left.sum()}')
-        # print(f'Right sum = {self._scanArray_right.sum()}')
-        # print(f'Left std = {np.std(self._scanArray_left, dtype=np.int32)}')
-        # print(f'Right std = {np.std(self._scanArray_right, dtype=np.int32)}')
-        # print(f'Back std = {np.std(self._scanArray_back, dtype=np.int32)}')
-        # print(f'Forward std = {np.std(self._scanArray_forward, dtype=np.int32)}')
-
-        self._scanSTDleft = np.std(self._scanArray_left, dtype=np.int32) - (np.std(self._scanArray_back, dtype=np.int32) + np.std(self._scanArray_forward, dtype=np.int32)) / 2
-        self._scanSTDright = np.std(self._scanArray_right, dtype=np.int32) - (np.std(self._scanArray_back, dtype=np.int32) + np.std(self._scanArray_forward, dtype=np.int32)) / 2
-
-        self._leftCount = int((np.cov(self._scanArray_left, self._scanArray_forward).sum() + np.cov(self._scanArray_left, self._scanArray_back).sum()) / 2000)
-        self._rightCount = int((np.cov(self._scanArray_right, self._scanArray_forward).sum() + np.cov(self._scanArray_right, self._scanArray_back).sum()) / 2000)
-
-        self._leftCountTest = int((np.cov(self._scanArray_left, self._scanArray_forward, bias=True).sum() + np.cov(self._scanArray_left, self._scanArray_back, bias=True).sum()) / 2000)
-        self._rightCountTest = int((np.cov(self._scanArray_right, self._scanArray_forward, bias=True).sum() + np.cov(self._scanArray_right, self._scanArray_back, bias=True).sum()) / 2000)
-
-        self._spdR = self.__map(self._rightCountTest - self._leftCountTest, -10 * self._leftCount/self._leftCountTest, 10 * self._rightCount / self._rightCountTest, self._leftCount, self._rightCount)
-        self._spdL = self.__map(self._leftCountTest - self._rightCountTest, -10 * self._leftCount/self._leftCountTest, 10 * self._rightCount / self._rightCountTest, self._leftCount, self._rightCount)
-
-        # print(f'Left count = {self._leftCount}, Right count = {self._rightCount}')
-        # print(f'Left count test = {self._leftCountTest}, Right count test = {self._rightCountTest}')
-        # print(f'Attitude left = {self._leftCount/self._leftCountTest}, Attitude right = {self._rightCount/self._rightCountTest}')
-
-        #print(self._scanArray[0:90])
-        #self.showAll()
-        #print(np.array(self._arrayXY[0:90])/1000)
-        #print()
+        self._spdL = self.__PID(self._spdR / round((np.std([LF, RL, LB]) - np.std([RF, RL, RB])) + 1, 2), self._spdL)
+        self._spdR = self.__PID(self._spdR / round((np.std([RF, RL, RB]) - np.std([LF, RL, LB])) + 1, 2), self._spdR)
 
     def setScanArray(self, scan):
         self._scanArray = np.array(scan)
 
     def getSpeed(self):
-        return int(self._spdL) if self._spdL > self._spdR else int(self._spdL * (-0.1)), int(self._spdR) if self._spdR > self._spdL else int(self._spdR * (-0.1))
+        if self._spdL != self._spdR:
+            return int(self._spdL) if self._spdL > self._spdR else int(self._spdL * (-1)), int(self._spdR) if self._spdR > self._spdL else int(self._spdR * (-1))
+        else:
+            return abs(int(self._spdL)), abs(int(self._spdR))
+
 
     def covariance(self, a, b):
         
@@ -136,10 +152,10 @@ class Chanks(object):
         mPID = mainPID(5, self._kp, self._ki, self._kd, 50, 265)
         return mPID.calc(current, target)
 
-    def __findY(self, distance, index):
+    def Y(self, distance, index):
         return int(distance * math.cos((index * math.pi) / 180))
 
-    def __findX(self, distance, index):
+    def X(self, distance, index):
         return int(distance * math.sin((index * math.pi) / 180))
 
     def __map(self, value, new_min, new_max, old_min, old_max):
