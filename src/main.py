@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 
 import rospy 
-import os 
-import glob
-import serial.tools.list_ports_linux as prt
 
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Int32
@@ -11,8 +8,9 @@ from sensor_msgs.msg import LaserScan, Temperature, BatteryState
 from Helpers.MotionAlgorithmD import Algorithm as algD
 from Helpers.MotionAlgorithmS import Chanks as algS
 
+#ты лох
 
-chanksAlg = algS(1, 1, 1)
+chanksAlg = algS(2, 0, 0)
 simpleAlg = algD()
 
 def scan_callback(msg):
@@ -45,15 +43,15 @@ def main():
         #msg_XL430L.x, msg_XL430R.x = chanksAlg.getSpeed() # Speed
 
         msg_XL430L, msg_XL430R = simpleAlg.getSpeed() 
-        #msg_XL430L, msg_XL430R = chanksAlg.getSpeed() # Speed
+        # msg_XL430L, msg_XL430R = chanksAlg.getSpeed() # Speed
         # msg_XL430L.z = IDK
         # msg_XL430L.z = IDK
-        #rospy.loginfo("left = " + str(msg_XL430L))
-        #rospy.loginfo("right = " + str(msg_XL430R))
+        rospy.loginfo("left = " + str(msg_XL430L))
+        rospy.loginfo("right = " + str(msg_XL430R))
         # msg_XL430L = 0
         # msg_XL430R = 0
-        #Publisher_XL430L.publish(msg_XL430L)
-        #Publisher_XL430R.publish(msg_XL430R)
+        Publisher_XL430L.publish(msg_XL430L)
+        Publisher_XL430R.publish(msg_XL430R)
         rate.sleep()
         
 
