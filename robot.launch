@@ -1,0 +1,10 @@
+<launch>
+    <node pkg="maze_perch" type="main.py" name="MAIN">
+    </node>
+	<node pkg="maze_perch" type="Lidar.py" name="LIDAR">
+	</node>
+	<node pkg="maze_perch" type="PORT.py" name="PORT">
+	</node>
+	
+
+</launch>

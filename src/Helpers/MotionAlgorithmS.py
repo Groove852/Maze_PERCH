@@ -112,17 +112,17 @@ class Chanks(object):
         self._leftBuffer[self._bufCount] = self._spdL
         self._rightBuffer[self._bufCount] = self._spdR
 
-        self._spdL = self.__PID(self._spdR / round((np.std([LF, RL, LB]) - np.std([RF, RL, RB])) + 1, 2), self._spdL)
-        self._spdR = self.__PID(self._spdR / round((np.std([RF, RL, RB]) - np.std([LF, RL, LB])) + 1, 2), self._spdR)
+        self._spdL = self.__PID(self._spdR / round((np.std([LF, RL, LB]) - np.std([RF, RL, RB])) + 1, 2), int(self._spdL + 1) if self._spdL > self._spdR else int(self._spdL * (-1) + 1))
+        self._spdR = self.__PID(self._spdR / round((np.std([RF, RL, RB]) - np.std([LF, RL, LB])) + 1, 2), int(self._spdR + 1) if self._spdR > self._spdL else int(self._spdR * (-1) + 1))
 
     def setScanArray(self, scan):
         self._scanArray = np.array(scan)
 
     def getSpeed(self):
         if self._spdL != self._spdR:
-            return int(self._spdL) if self._spdL > self._spdR else int(self._spdL * (-1)), int(self._spdR) if self._spdR > self._spdL else int(self._spdR * (-1))
+            return int(self._spdL + 1) if self._spdL > self._spdR else int(self._spdL * (-1) + 1), int(self._spdR + 1) if self._spdR > self._spdL else int(self._spdR * (-1) + 1)
         else:
-            return abs(int(self._spdL)), abs(int(self._spdR))
+            return abs(int(self._spdL + 1)), abs(int(self._spdR + 1))
 
 
     def covariance(self, a, b):

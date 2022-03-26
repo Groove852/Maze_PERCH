@@ -26,6 +26,7 @@ class Algorithm(object):
     _targetPoint = 0
     _mass = np.empty((0,4), np.int32)
     _targets = np.array([])
+    _flag = 0
 
 
     def __init__(self):
@@ -68,9 +69,6 @@ class Algorithm(object):
                     self._tmp = 0
                     self._fMin = False
                     self._fMax = True
-            if array[i-1] < array[i] or self._fMax:
-                self._fMax = True
-                self._tmp += 1
 
 
         self._fMin = False
@@ -116,12 +114,16 @@ class Algorithm(object):
                     clearTargets = np.append(clearTargets, int(tmp/counter))
                     tmp = 0
                     counter = 0
-            self._targetPoint = clearTargets.max()        
+            
+            if self._flag == 0:
+                self._targetPoint = clearTargets.max()
+            if self._flag == (1 or 2):
+                self._targetPoint = clearTargets[1]           
 
             return clearTargets 
         else:
             self._targetPoint = 0
-            return [0]                          
+            return 0                          
 
     def launch(self, msg_array):
         self.clear()
@@ -130,20 +132,45 @@ class Algorithm(object):
         self.pullingMass(calculatedArray)
         array = np.array((self.findDirection(calculatedArray.mean())), np.int32)
         
-        if self._targetPoint >= 350 or self._targetPoint <= 10:
-            self._spdL = 50
-            self._spdR = 50
-        elif self._targetPoint < 180:
-            self._spdL = -25
-            self._spdR = 25
-        elif self._targetPoint >= 180:
-            self._spdL = 25
-            self._spdR = -25    
-                   
+        
+        
+        if self._flag == 0:
+            if self._targetPoint >= 350 or self._targetPoint <= 10:
+                self._spdL = 50
+                self._spdR = 50
+                self._flag = 1
+            elif self._targetPoint < 180:
+                self._spdL = -25
+                self._spdR = 25
+            elif self._targetPoint >= 180:
+                self._spdL = 25
+                self._spdR = -25    
+
+        if self._flag == 1:
+            if self._targets[-2:2] <= 200:
+                self.flag = 2
+            else:
+                self._spdL = 50
+                self._spdR = 50
+
+        if self._flag == 2:
+            if self._targetPoint >= 350 or self._targetPoint <= 10:
+                self._spdL = 50
+                self._spdR = 50
+                self._flag = 1
+            elif self._targetPoint < 180:
+                self._spdL = -25
+                self._spdR = 25
+            elif self._targetPoint >= 180:
+                self._spdL = 25
+                self._spdR = -25              
+
+
+
 
         
 
-        self.show(array)
+        #self.show(array)
 
 
     def show(self, array):

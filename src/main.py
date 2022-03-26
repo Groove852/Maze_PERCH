@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 import rospy 
 
 from geometry_msgs.msg import Vector3
@@ -8,7 +8,6 @@ from sensor_msgs.msg import LaserScan, Temperature, BatteryState
 from Helpers.MotionAlgorithmD import Algorithm as algD
 from Helpers.MotionAlgorithmS import Chanks as algS
 
-#ты лох
 
 chanksAlg = algS(2, 0, 0)
 simpleAlg = algD()
@@ -16,8 +15,8 @@ simpleAlg = algD()
 def scan_callback(msg):
     simpleAlg.launch(msg.ranges)
 
-    #chanksAlg.setScanArray(msg.ranges)
-    #chanksAlg.calculate()
+    # chanksAlg.setScanArray(msg.ranges)
+    # chanksAlg.calculate()
 
 def temp_callback(msg):
     return

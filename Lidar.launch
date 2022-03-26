@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="maze_perch" type="Lidar.py" name="LIDAR">
+	</node>
+</launch>
